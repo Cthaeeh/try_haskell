@@ -75,9 +75,41 @@ defaultGameState = GameState{onMove = White,
 
 d = pprintBoard (board defaultGameState )
 
---genMoves :: GameState -> [GameState]
---genMoves s = 
+genMoves :: GameState -> [GameState]
+genMoves gs = fmap (squaresOccupiedByColor (onMove gs) (board gs)) (movesFrom gs)
 
-main = putStrLn d 
+squaresOccupiedByColor color board = [x | x <- allPositions, hasPieceWithColor board color x]
+
+allPositions = cartesianProduct [0..7] [0..7]
+
+cartesianProduct xs ys = [(x,y) | x <- xs, y <- ys]
+
+hasPieceWithColor board color position = case (board[fst position][snd position]) of
+        Full (Piece color _) -> True
+        x -> False
+
+movesFrom gameState position = case ((board gamestate)[fst position][snd position]) of 
+        x -> []
+        Full p -> makeMoves p position gameState
+
+makeMoves piece position gameState = ???
+
+outSideBoard (a,b) = (0 > a) || (a > 7) || (0 > b) || (b > 7)
+-- Generally possible rook moves from a position.
+rookMoves (a,b) = zip [0..7] (repeat a) ++ zip (repeat b) [0..7]
+-- Generally possible bishop moves from a position.
+bishopMoves (a,b) = [(1,0)]
+-- Generally possible knight moves from a position.
+knightMoves (a,b) = [(1,0)]
+-- Generally possible queen moves from a position.
+queenMoves (a,b) = rookMoves (a,b) ++ bishopMoves (a,b)
+-- Generally possible king moves from a position.
+kingMoves (a,b) = [(a-1,b-1),(a-1,b),(a-1,b+1), (a,b-1),(a,b+1), (a+1, b-1),(a+1,b),(a+1,b+1)]
+-- Generally possible Downwards Pawn moves from a position.
+pawnMovesUp (a,b) = [x | x <- [(a,b+1),(a,b-1),(a,b-1)]]
+-- Generally possible Upwards Pawn moves from a position.
+pawnMovesDown (a,b) = [x | x <- [(a,b+1),(a,b-1),(a,b-1)]]
+
+main = putStrLn (show (rookMoves (0, 0)) )
 
 
