@@ -19,7 +19,7 @@ pprintSquare s = case s of
     Full (Piece Black Pawn) -> "p"
 
 pprintLine :: [Square] -> String
-pprintLine = foldl (\l r -> concat [l, " ", pprintSquare r]) ""
+pprintLine = foldl (\l r -> concat [pprintSquare r, " ", l]) ""
 
 pprintBoard :: Board -> String
 pprintBoard b = foldr (\l r -> concat [r, pprintLine l, "\n"]) "" (transpose (reverse b))

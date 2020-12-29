@@ -9,7 +9,7 @@ data Piece = Piece { color     :: Color ,
                      pieceType :: PType
                    } deriving (Show, Eq)
 
-data Square = Empty | Full Piece deriving (Show)
+data Square = Empty | Full Piece deriving (Show, Eq)
 
 type Sqr = (Int, Int)
 type Move = (Sqr, Sqr) 
@@ -32,14 +32,14 @@ bN = Full (Piece Black Knight)
 bP = Full (Piece Black Pawn)
 
 -- white king is on 4 0 (e1)
-defaultBoard = transpose [[wR,wN,wB,wQ,wK,wB,wN,wR],
-                          [wP,wP,wP,wP,wP,wP,wP,wP],
-                          [eM,eM,eM,eM,eM,eM,eM,eM],
-                          [eM,eM,eM,eM,eM,eM,eM,eM],
-                          [eM,eM,eM,eM,eM,eM,eM,eM],
-                          [eM,eM,eM,eM,eM,eM,eM,eM],
-                          [bP,bP,bP,bP,bP,bP,bP,bP],
-                          [bR,bN,bB,bQ,bK,bB,bN,bR]]
+defaultBoard = transpose (reverse [[bR,bN,bB,bQ,bK,bB,bN,bR],
+                                   [bP,bP,bP,bP,bP,bP,bP,bP],
+                                   [eM,eM,eM,eM,eM,eM,eM,eM],
+                                   [eM,eM,eM,eM,eM,eM,eM,eM],
+                                   [eM,eM,eM,eM,eM,eM,eM,eM],
+                                   [eM,eM,eM,eM,eM,eM,eM,eM],
+                                   [wP,wP,wP,wP,wP,wP,wP,wP],
+                                   [wR,wN,wB,wQ,wK,wB,wN,wR]])
 
 type EnPassantRights = Bool
 

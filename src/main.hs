@@ -2,24 +2,17 @@ module Main (main) where
 
 import ChessData
 import PrettyPrint
+import Util
 
-count pred list = sum [ 1 | x <- list, pred x ]
-
-genMoves :: GameState -> [GameState]
-genMoves gs = concatMap (movesFromSquare gs) (squaresOccupiedByColor (onMove gs) (board gs))
+generateMoves :: GameState -> [GameState]
+generateMoves gs = concatMap (movesFromSquare gs) (squaresOccupiedByColor (onMove gs) (board gs))
 
 squaresOccupiedByColor :: Color -> Board -> [Sqr]
-squaresOccupiedByColor color board = [x | x <- allSquares, hasPieceWithColor board color x]
-
-allSquares :: [Sqr]
-allSquares = cartesianProduct [0 .. 7] [0 .. 7]
-
--- TODO move to util
-cartesianProduct :: [a] -> [b] -> [(a, b)]
-cartesianProduct xs ys = [(x, y) | x <- xs, y <- ys]
+squaresOccupiedByColor color board = [x | x <- allSquares, hasPieceWithColor board color x] 
+  where allSquares = cartesianProduct [0 .. 7] [0 .. 7]
 
 hasPieceWithColor :: Board -> Color -> Sqr -> Bool
-hasPieceWithColor board color position =  pieceColor board position == Just color
+hasPieceWithColor board color position =  pieceColorAt board position == Just color
 
 movesFromSquare :: GameState -> Sqr -> [GameState]
 movesFromSquare gameState position = case board gameState `at` position of
@@ -29,6 +22,7 @@ movesFromSquare gameState position = case board gameState `at` position of
 movesWithPieceFrom :: Piece -> Sqr -> GameState -> [GameState]
 movesWithPieceFrom piece from gameState = map (transformGameState gameState) (filter (isLegalMove gameState) (genericMoves piece from))
 
+next :: Color -> Color
 next c = case c of
   White -> Black
   Black -> White
@@ -39,38 +33,39 @@ transformGameState state move = GameState (next (onMove state)) (makeMove (board
 
 -- TODO promotion 
 makeMove :: Board -> Move -> Board 
-makeMove board (from, to) = replace (replace board to (board `at` to)) from Empty 
+makeMove board (from, to) = replace (replace board to (board `at` from)) from Empty 
 
 replace :: Board -> Sqr -> Square -> Board
 replace board (x, y) content = changeNth x (changeNth y content (board !! x)) board
-
-changeNth :: Int->a->[a]->[a]
-changeNth n e (x:xs)
-     | n == 0 = e:xs
-     | otherwise = x:changeNth (n-1) e xs
 
 genericMoves :: Piece -> Sqr -> [Move] 
 genericMoves piece from = case piece of
   Piece White Pawn -> zip (repeat from) (pawnMovesUp from) 
   Piece Black Pawn -> zip (repeat from) (pawnMovesDown from) 
+  Piece White Knight -> zip (repeat from) (knightMoves from) 
+  Piece Black Knight -> zip (repeat from) (knightMoves from) 
   x -> []
 
 isLegalMove :: GameState -> Move -> Bool
 isLegalMove state move = not (isFriendlyFire (board state) move || isCollision (board state) move || isSuicide state move || isPieceSpecificIllegal state move)
 
 at :: Board -> Sqr -> Square 
-at b (x, y) = b !! y !! x
+at b (x, y) = b !! x !! y
 
+pieceAt :: Board -> Sqr -> Maybe Piece 
+pieceAt board pos = case board `at` pos of
+  Empty -> Nothing 
+  Full p -> Just p
 
-
-pieceColor :: Board -> Sqr -> Maybe Color 
-pieceColor board pos = case board `at` pos of
+pieceColorAt :: Board -> Sqr -> Maybe Color 
+pieceColorAt board pos = case board `at` pos of
   Empty -> Nothing 
   Full p -> Just (color p)
 
+
 -- You can not take your own pieces. 
 isFriendlyFire :: Board -> Move -> Bool
-isFriendlyFire board (to, from) = pieceColor board from == pieceColor board to
+isFriendlyFire board (to, from) = pieceColorAt board from == pieceColorAt board to
 
 x :: (a, b) -> a
 x = fst
@@ -95,7 +90,18 @@ isSuicide state move = False
 
 -- Pawns can only capture diagonally, Castling rules must be valid, En passant must be valid.
 isPieceSpecificIllegal :: GameState -> Move -> Bool
-isPieceSpecificIllegal state move = False
+isPieceSpecificIllegal state (from, to) = case b `pieceAt` from of 
+  Just (Piece White Pawn) -> isDiagonalMove (from, to) && b `at` to == Empty 
+  Just (Piece Black Pawn) -> isDiagonalMove (from, to) && b `at` to == Empty
+  _ -> False
+  where b = board state
+
+
+isDiagonalMove :: Move -> Bool
+isDiagonalMove move = abs (xDiff move) == abs (yDiff move)
+
+xDiff (from, to) = x to - x from
+yDiff (from, to) = y to - y from
 
 --
 outside :: Sqr -> Bool
@@ -108,7 +114,7 @@ rookMoves (a, b) = zip [0 .. 7] (repeat a) ++ zip (repeat b) [0 .. 7]
 bishopMoves (a, b) = [(1, 0)]
 
 -- Generally possible knight moves from a position.
-knightMoves (a, b) = [(1, 0)]
+knightMoves (x, y) = [x | x <- [(x + 1, y + 2), (x + 1, y - 2), (x + 2, y + 1), (x + 2, y - 1), (x - 1, y + 2), (x - 1, y - 2), (x - 2, y + 1), (x - 2, y - 1)], not (outside x)]
 
 -- Generally possible queen moves from a position.
 queenMoves (a, b) = rookMoves (a, b) ++ bishopMoves (a, b)
@@ -129,11 +135,8 @@ pawnMovesDown (x, y) = [x | x <- [(x, y - 1), (x - 1, y - 1), (x + 1, y - 1)], n
 testPrint = pprintBoard (board defaultGameState)
 
 -- Should give us a list with the 20 possible positions after first half-move.
-testGenMoves = genMoves defaultGameState
+testGenMoves = generateMoves defaultGameState
 
 boards = map board testGenMoves
 
 main = putStrLn (foldl (\l r -> concat [l, pprintBoard r, "---\n"]) "" boards)
-
---main = print (show (genericMoves (Piece White Pawn) (1,1)))
-
