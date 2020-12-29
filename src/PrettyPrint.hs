@@ -1,5 +1,6 @@
 module PrettyPrint where
 import ChessData
+import Data.List
 
 pprintSquare :: Square -> String
 pprintSquare s = case s of
@@ -18,7 +19,7 @@ pprintSquare s = case s of
     Full (Piece Black Pawn) -> "p"
 
 pprintLine :: [Square] -> String
-pprintLine l = foldl (\l r -> concat [l, " ", pprintSquare r]) "" l
+pprintLine = foldl (\l r -> concat [l, " ", pprintSquare r]) ""
 
 pprintBoard :: Board -> String
-pprintBoard b = foldl (\l r -> concat [l, pprintLine r, "\n"]) "" b
+pprintBoard b = foldr (\l r -> concat [r, pprintLine l, "\n"]) "" (transpose (reverse b))

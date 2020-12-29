@@ -1,14 +1,18 @@
 module ChessData where 
 
-data Color = White | Black deriving (Show)
-data PType = Pawn | Knight | Bishop | Rook | Queen | King deriving (Show)
+import Data.List
 
-data Piece = Piece { color     ::   Color ,
+data Color = White | Black deriving (Show, Eq)
+data PType = Pawn | Knight | Bishop | Rook | Queen | King deriving (Show, Eq)
+
+data Piece = Piece { color     :: Color ,
                      pieceType :: PType
-                   } deriving (Show)
+                   } deriving (Show, Eq)
 
 data Square = Empty | Full Piece deriving (Show)
-type Pos = (Int, Int)
+
+type Sqr = (Int, Int)
+type Move = (Sqr, Sqr) 
 type Board = [[Square]]
 
 eM = Empty
@@ -27,14 +31,15 @@ bB = Full (Piece Black Bishop)
 bN = Full (Piece Black Knight)
 bP = Full (Piece Black Pawn)
 
-defaultBoard = [[bR,bN,bB,bQ,bK,bB,bN,bR],
-                [bP,bP,bP,bP,bP,bP,bP,bP],
-                [eM,eM,eM,eM,eM,eM,eM,eM],
-                [eM,eM,eM,eM,eM,eM,eM,eM],
-                [eM,eM,eM,eM,eM,eM,eM,eM],
-                [eM,eM,eM,eM,eM,eM,eM,eM],
-                [wP,wP,wP,wP,wP,wP,wP,wP],
-                [wR,wN,wB,wQ,wK,wB,wN,wR]]
+-- white king is on 4 0 (e1)
+defaultBoard = transpose [[wR,wN,wB,wQ,wK,wB,wN,wR],
+                          [wP,wP,wP,wP,wP,wP,wP,wP],
+                          [eM,eM,eM,eM,eM,eM,eM,eM],
+                          [eM,eM,eM,eM,eM,eM,eM,eM],
+                          [eM,eM,eM,eM,eM,eM,eM,eM],
+                          [eM,eM,eM,eM,eM,eM,eM,eM],
+                          [bP,bP,bP,bP,bP,bP,bP,bP],
+                          [bR,bN,bB,bQ,bK,bB,bN,bR]]
 
 type EnPassantRights = Bool
 
