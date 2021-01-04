@@ -3,13 +3,15 @@ import MoveGen
 import PrettyPrint
 import ChessData
 import Data.Tree
+import Data.Ord
+import Data.Foldable
 
 -- Should give us a list with the 20 possible positions after first half-move.
 testGenMoves = generateMoves defaultGameState
 
 makeNode state = (state, generateMoves state) 
 
-gameTree = unfoldTree makeNode defaultGameState
+gameTree = unfoldTree makeNode 
 
 boards = map board testGenMoves
 
@@ -43,10 +45,44 @@ minimise :: Tree Double -> Double
 minimise (Node n []) = n
 minimise (Node n subTree) = minimum (map maximise subTree)
 
-smallTree = prune 5 gameTree
+staticEvalTree = fmap (staticEval .board)
 
-smallTreeStaticEvaluated = fmap (staticEval .board) smallTree
+eval x = maximise $ staticEvalTree $ prune 5 $ gameTree x
 
-eval = maximise smallTreeStaticEvaluated
+-- TODO also allow to play black
+makeAIMove :: GameState -> GameState 
+makeAIMove gameState = case onMove gameState of
+    White -> maximumBy (comparing eval) (generateMoves gameState)
+    Black -> minimumBy (comparing eval) (generateMoves gameState)
+    
+parseSquare :: String -> Sqr
+parseSquare s = (0, 0)
 
-main = print eval
+makeHumanMove :: GameState -> IO GameState
+makeHumanMove state = do
+    putStr (pprintBoard (board state))
+    putStr "Enter start square, like e1:\n" 
+    from <- getLine
+    to <- getLine
+    let move = (parseSquare from, parseSquare to)
+    print move
+    pure (transformGameState state move)
+
+    
+
+detectWin :: GameState -> Maybe Color
+detectWin s = Nothing
+
+playGame :: GameState -> IO Color
+playGame state = do
+    gameState <- if onMove state == Black
+        then pure (makeAIMove state)
+        else makeHumanMove state
+    case detectWin gameState of
+        Nothing -> playGame gameState
+        Just color -> pure color
+
+main = do 
+    putStrLn "Let's play chess, you get white!\n"
+    winner <- playGame defaultGameState 
+    putStr $ show winner ++ "wins !\n"
