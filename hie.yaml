@@ -1,0 +1,7 @@
+cradle:
+  stack:
+    - path: "./src"
+      component: "chess:lib:chessLib"
+
+    - path: "./app/Main.hs"
+      component: "chess:exe:chess"

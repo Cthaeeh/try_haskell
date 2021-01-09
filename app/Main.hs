@@ -83,6 +83,6 @@ playGame state = do
         Just color -> pure color
 
 main = do 
-    putStrLn "Let's play chess, you get white!\n"
+    putStrLn "Let's play chesss, you get white!\n"
     winner <- playGame defaultGameState 
     putStr $ show winner ++ "wins !\n"
