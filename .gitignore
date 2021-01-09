@@ -1,1 +1,3 @@
-/build
+stack.yaml
+stack.yaml.lock
+.stack-work/
